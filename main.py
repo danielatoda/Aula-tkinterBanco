@@ -36,20 +36,31 @@ def cadastrar():
     tkinter.messagebox.showinfo(title="Sucesso!", message="Aluno cadastrado!") # mensagem que inserção ocorreu
 
 def consultar():
-  tree.delete(*tree.get_children()) #limpar tree view
+  arvore.delete(*arvore.get_children()) #limpar tree view
   banco() # chamar conexão com o banco
   cursor.execute("SELECT * FROM `aluno` ORDER BY `nome` ASC") # seleção com ordenamento por nome
   fetch = cursor.fetchall() # retorna os resultados como tuplas e armazena em fetch
   for dados in fetch: # insere tuplas do fetch na árvore
-    tree.insert('', 'end', values=(dados[1], dados[2], dados[3]))
-    cursor.close() # encerrar cursor
-    conexao.close() # encerrar conexão
+    arvore.insert('', 'end', values=(dados[0],dados[1], dados[2], dados[3]))
+  cursor.close() # encerrar cursor
+  conexao.close() # encerrar conexão
     
 def sair():
-  resultado = tkMessageBox.askquestion('Cadastro Alunos', 'Tem certeza que deseja sair?', icon="warning") #pergunta se deseja realmente sair
+    resultado = tkMessageBox.askquestion('Cadastro Alunos', 'Tem certeza que deseja sair?', icon="warning") #pergunta se deseja realmente sair
+    if resultado == 'yes':
+        principal.destroy() # fecha tela
+        exit()
+
+def deletar():
+  banco()
+  item = arvore.selection()[0] # recebe item selecionado na árvore
+  resultado = tkinter.messagebox.askquestion("Confirmação", "Tem certeza que deseja excluir aluno?", icon="warning")
   if resultado == 'yes':
-    principal.destroy() # fecha tela
-    exit()
+    for item in arvore.selection():
+      cursor.execute("DELETE FROM aluno WHERE id = ?", (arvore.set(item, '#1'),))
+      arvore.delete(item)
+  conexao.commit()
+  conexao.close()
 
 # variáveis
 nome = StringVar()
@@ -95,23 +106,27 @@ btn_cadastrar = Button(Buttons, width=10, text="Cadastrar", command=cadastrar)
 btn_cadastrar.pack(side=LEFT)
 btn_consultar = Button(Buttons, width=10, text="Consultar", command=consultar)
 btn_consultar.pack(side=LEFT)
-btn_sair = Button(Buttons, width=10, text="Exit", command=sair)
+btn_sair = Button(Buttons, width=10, text="Excluir", command=deletar)
+btn_sair.pack(side=LEFT)
+btn_sair = Button(Buttons, width=10, text="Sair", command=sair)
 btn_sair.pack(side=LEFT)
 
 # treeview
 scrollbary = Scrollbar(direita, orient=VERTICAL)
 scrollbarx = Scrollbar(direita, orient=HORIZONTAL)
-tree = ttk.Treeview(direita, columns=("Nome", "Sobrenome", "Email"), selectmode="extended", height=200, yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
-scrollbary.config(command=tree.yview)
+arvore = ttk.Treeview(direita, columns=("Id","Nome", "Sobrenome", "Email"), selectmode="extended", height=200, yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+scrollbary.config(command=arvore.yview)
 scrollbary.pack(side=RIGHT, fill=Y)
-scrollbarx.config(command=tree.xview)
+scrollbarx.config(command=arvore.xview)
 scrollbarx.pack(side=BOTTOM, fill=X)
-tree.heading('Nome', text="Nome", anchor=W)
-tree.heading('Sobrenome', text="Sobrenome", anchor=W)
-tree.heading('Email', text="E-mail", anchor=W)
-tree.column('#0', stretch=NO, minwidth=0, width=0)
-tree.column('#1', stretch=NO, minwidth=0, width=80)
-tree.column('#2', stretch=NO, minwidth=0, width=80)
-tree.pack()
+arvore.heading('Id', text="ID", anchor=W)
+arvore.heading('Nome', text="Nome", anchor=W)
+arvore.heading('Sobrenome', text="Sobrenome", anchor=W)
+arvore.heading('Email', text="E-mail", anchor=W)
+arvore.column('#0', stretch=NO, minwidth=0, width=0)
+arvore.column('#1', stretch=NO, minwidth=0, width=80)
+arvore.column('#2', stretch=NO, minwidth=0, width=80)
+arvore.column('#3', stretch=NO, minwidth=0, width=80)
+arvore.pack()
 
 principal.mainloop()
