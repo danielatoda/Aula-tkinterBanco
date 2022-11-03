@@ -14,40 +14,42 @@ principal.geometry("700x300")
 
 # métodos
 def banco():
-    global conn, cursor
-    conn = sqlite3.connect('banco.db')
-    cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS `aluno` (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, nome TEXT, sobrenome TEXT, email TEXT)")
+  global conexao, cursor
+  conexao = sqlite3.connect('banco.db')
+  cursor = conexao.cursor()
+  cursor.execute("CREATE TABLE IF NOT EXISTS `aluno` (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, nome TEXT, sobrenome TEXT, email TEXT)")
     
 def cadastrar():
-    if  nome.get() == "" or sobrenome.get() == ""  or email.get() == "":
-        tkinter.messagebox.showinfo(title="Erro",message="Preencha todos os campos!")
-    else:
-        banco()
-        cursor.execute("INSERT INTO `aluno` (nome, sobrenome, email) VALUES(?, ?, ?)", (str(nome.get()), str(sobrenome.get()), str(email.get())))
-        conn.commit()
-        nome.delete(0,"end")
-        sobrenome.delete(0,"end")
-        email.delete(0,"end")
-        cursor.close()
-        conn.close()
-        tkinter.messagebox.showinfo(title="Sucesso!", message="Aluno cadastrado!")
+  # se houver campos em branco, exibe mensagem de erro
+  if  nome.get() == "" or sobrenome.get() == ""  or email.get() == "":
+    tkinter.messagebox.showinfo(title="Erro",message="Preencha todos os campos!")
+  # se não, faz o registro no banco de dados
+  else:
+    banco()# chamar função para conectar ao banco
+    cursor.execute("INSERT INTO `aluno` (nome, sobrenome, email) VALUES(?, ?, ?)", (str(nome.get()), str(sobrenome.get()), str(email.get())))
+    conexao.commit() # validar inserção
+    nome.delete(0,"end") # limpar campo nome
+    sobrenome.delete(0,"end") # limpar campo sobrenome
+    email.delete(0,"end") # limpar campo e-mail
+    cursor.close() # encerrar cursor
+    conexao.close() # encerrar conexão
+    tkinter.messagebox.showinfo(title="Sucesso!", message="Aluno cadastrado!") # mensagem que inserção ocorreu
 
 def consultar():
-    tree.delete(*tree.get_children())
-    banco()
-    cursor.execute("SELECT * FROM `aluno` ORDER BY `nome` ASC")
-    fetch = cursor.fetchall()
-    for data in fetch:
-        tree.insert('', 'end', values=(data[1], data[2], data[3]))
-    cursor.close()
-    conn.close()
+  tree.delete(*tree.get_children()) #limpar tree view
+  banco() # chamar conexão com o banco
+  cursor.execute("SELECT * FROM `aluno` ORDER BY `nome` ASC") # seleção com ordenamento por nome
+  fetch = cursor.fetchall() # retorna os resultados como tuplas e armazena em fetch
+  for dados in fetch: # insere tuplas do fetch na árvore
+    tree.insert('', 'end', values=(dados[1], dados[2], dados[3]))
+    cursor.close() # encerrar cursor
+    conexao.close() # encerrar conexão
     
 def sair():
-    result = tkMessageBox.askquestion('Cadastro Alunos', 'Tem certeza que deseja sair?', icon="warning")
-    if result == 'yes':
-        principal.destroy()
-        exit()
+  resultado = tkMessageBox.askquestion('Cadastro Alunos', 'Tem certeza que deseja sair?', icon="warning") #pergunta se deseja realmente sair
+  if resultado == 'yes':
+    principal.destroy() # fecha tela
+    exit()
 
 # variáveis
 nome = StringVar()
@@ -67,8 +69,8 @@ Buttons = Frame(esquerda, width=100, height=100, background=cor1, relief="raise"
 Buttons.pack(side=BOTTOM)
 
 # labels
-txt_title = Label(topo, width=600, font=('arial', 18), text = "Cadastro de alunos", background=cor2)
-txt_title.pack()
+txt_titulo = Label(topo, width=600, font=('arial', 18), text = "Cadastro de alunos", background=cor2)
+txt_titulo.pack()
 txt_nome = Label(Forms, text="Nome:", font=('arial', 10), bd=15, background=cor1)
 txt_nome.grid(row=0, stick="e")
 txt_sobrenome = Label(Forms, text="Sobrenome:", font=('arial', 10), bd=15, background=cor1)
